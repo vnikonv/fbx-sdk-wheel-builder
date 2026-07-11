@@ -109,7 +109,7 @@ def verify_sdk_structure(sdk_path: Path) -> bool:
         if not (sdk_path / dir_name).exists():
             print(f"ERROR: Missing SDK directory: {sdk_path / dir_name}")
             return False
-    print(f"✓ SDK structure verified")
+    print("SDK structure verified")
     return True
 
 
@@ -118,7 +118,7 @@ def verify_bindings_structure(bindings_path: Path) -> bool:
     if not (bindings_path / "sip").exists():
         print(f"ERROR: Missing bindings sip/ directory: {bindings_path / 'sip'}")
         return False
-    print(f"✓ Bindings structure verified")
+    print("Bindings structure verified")
     return True
 
 
