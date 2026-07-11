@@ -13,18 +13,6 @@ CACHE_DIR = ROOT / "cache"
 SDK_CACHE = CACHE_DIR / "fbxsdk"
 BIND_CACHE = CACHE_DIR / "fbxbind"
 
-VCVARS_PATHS = [
-    Path(r"C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"),
-    Path(r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"),
-    Path(r"C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"),
-    Path(r"C:\Program Files (x86)\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat"),
-    Path(r"C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"),
-    Path(r"C:\Global\VS_2022\VC\Auxiliary\Build\vcvarsall.bat"),
-]
-
-BUILD_TARGET = "x64"
-VCVARS_VER = "14.44"
-
 
 class BuildError(RuntimeError):
     pass
@@ -74,18 +62,8 @@ def find_bindings_root() -> Path:
     )
 
 
-def find_vcvarsall() -> Path:
-    explicit = os.environ.get("VCVARSALL_PATH")
-    if explicit:
-        path = Path(explicit)
-        if path.exists():
-            return path
-        raise BuildError(f"VCVARSALL_PATH is set but the file does not exist: {path}")
-
+def find_vcvarsall(VCVARS_PATHS: list[Path]) -> Path:
     candidates = []
-    vsinstall = os.environ.get("VSINSTALLDIR")
-    if vsinstall:
-        candidates.append(Path(vsinstall) / "VC" / "Auxiliary" / "Build" / "vcvarsall.bat")
     candidates.extend(VCVARS_PATHS)
 
     for candidate in candidates:
@@ -114,7 +92,15 @@ def run_command(cmd, cwd: Path | None = None, env: dict | None = None, shell: bo
 
 
 def build_windows(sdk_root: Path, bindings_root: Path) -> None:
-    vcvarsall = find_vcvarsall()
+
+    VCVARS_PATHS = [
+    Path(r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"),
+    Path(r"C:\Global\VS_2022\VC\Auxiliary\Build\vcvarsall.bat"),
+    ]
+    BUILD_TARGET = "x64"
+    VCVARS_VER = "14.44"
+    
+    vcvarsall = find_vcvarsall(VCVARS_PATHS)
     sip_wheel = locate_sip_wheel()
     env = os.environ.copy()
     env["FBXSDK_ROOT"] = str(sdk_root)
