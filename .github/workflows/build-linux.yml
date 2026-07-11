@@ -1,0 +1,73 @@
+name: Build FBX Wheels (Linux)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: manylinux2014
+            python: "3.7"
+            platform: manylinux2014_x86_64
+
+          - os: manylinux2014
+            python: "3.9"
+            platform: manylinux2014_x86_64
+
+          - os: manylinux2014
+            python: "3.11"
+            platform: manylinux2014_x86_64
+
+          - os: manylinux2014
+            python: "3.13"
+            platform: manylinux2014_x86_64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Show build target
+        run: |
+          python --version
+          echo Platform: ${{ matrix.platform }}
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install sip==6.6.2
+
+      - name: Restore FBX SDK cache
+        id: cache-fbxsdk
+        uses: actions/cache@v4
+        with:
+          path: cache/fbxsdk
+          key: fbxsdk-2020.3.9-${{ runner.os }}
+
+      - name: Restore FBX Python Bindings cache
+        id: cache-fbxpython
+        uses: actions/cache@v4
+        with:
+          path: cache/fbxbind
+          key: fbxbindings-2020.3.9-${{ runner.os }}
+
+      - name: Install FBX SDK and FBX Python bindings
+        run: |
+          python scripts/install_fbx.py
+
+      - name: Build wheel
+        run: |
+          python scripts/build.py
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: fbx-2020.3.9-py${{ matrix.python }}-${{ matrix.platform }}
+          path: dist/*.whl

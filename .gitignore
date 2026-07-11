@@ -2,3 +2,6 @@
 *.pyproj
 *.sln
 .vs
+cache
+dist
+__pycache__
