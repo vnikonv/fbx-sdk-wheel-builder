@@ -62,18 +62,50 @@ def find_bindings_root() -> Path:
     )
 
 
-def find_vcvarsall(VCVARS_PATHS: list[Path]) -> Path:
-    candidates = []
-    candidates.extend(VCVARS_PATHS)
+def find_vcvarsall() -> Path:
+    vswhere = shutil.which("vswhere")
+    if not vswhere:
+        raise BuildError(
+            "vswhere.exe was not found on PATH. "
+            "windows-latest should include vswhere by default."
+        )
 
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
+    try:
+        result = subprocess.run(
+            [
+                vswhere,
+                "-latest",
+                "-products",
+                "*",
+                "-requires",
+                "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+                "-property",
+                "installationPath",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        raise BuildError(
+            f"vswhere.exe failed to query Visual Studio installation: {exc.stderr.strip() or exc}"
+        )
 
-    raise BuildError(
-        "Could not locate vcvarsall.bat. "
-        "Ensure Visual Studio Build Tools are installed or set VCVARSALL_PATH."
-    )
+    install_path = result.stdout.strip()
+    if not install_path:
+        raise BuildError(
+            "vswhere.exe did not return a Visual Studio installation path. "
+            "Ensure the runner has Visual Studio Build Tools installed."
+        )
+
+    vcvars = Path(install_path) / "VC" / "Auxiliary" / "Build" / "vcvarsall.bat"
+    if not vcvars.exists():
+        raise BuildError(
+            f"vcvarsall.bat was not found at the path reported by vswhere: {vcvars}"
+        )
+
+    return vcvars
 
 
 def locate_sip_wheel() -> str:
@@ -92,15 +124,10 @@ def run_command(cmd, cwd: Path | None = None, env: dict | None = None, shell: bo
 
 
 def build_windows(sdk_root: Path, bindings_root: Path) -> None:
-
-    VCVARS_PATHS = [
-    Path(r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"),
-    Path(r"C:\Global\VS_2022\VC\Auxiliary\Build\vcvarsall.bat"),
-    ]
     BUILD_TARGET = "x64"
     VCVARS_VER = "14.44"
-    
-    vcvarsall = find_vcvarsall(VCVARS_PATHS)
+
+    vcvarsall = find_vcvarsall()
     sip_wheel = locate_sip_wheel()
     env = os.environ.copy()
     env["FBXSDK_ROOT"] = str(sdk_root)
