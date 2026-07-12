@@ -146,18 +146,22 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
     run_command(["python -m sipbuild.tools.wheel", "--verbose", "--pep484-pyi"], cwd=bindings_root, env=env)
 
 
-def collect_wheels(bindings_root: Path) -> list[Path]:
+def collect_wheel(bindings_root: Path) -> list[Path]:
     built_dist = bindings_root
     if not built_dist.exists():
         raise BuildError(f"Expected wheel output in {built_dist}, but the directory does not exist.")
 
-    built_wheels = sorted(built_dist.glob("*.whl"))
-    if not built_wheels:
+    built_wheel = sorted(built_dist.glob("*.whl"))
+    if not built_wheel:
         raise BuildError(f"No wheel files were found in {built_dist} after build.")
 
+    if DIST_DIR.exists():
+        shutil.rmtree(DIST_DIR)
+
     DIST_DIR.mkdir(exist_ok=True)
+
     out = []
-    for wheel_path in built_wheels:
+    for wheel_path in built_wheel:
         destination = DIST_DIR / wheel_path.name
         shutil.copy2(wheel_path, destination)
         out.append(destination)
@@ -172,17 +176,15 @@ def main() -> int:
     print(f"FBX SDK root: {sdk_root}")
     print(f"FBX Python bindings root: {bindings_root}")
 
-    DIST_DIR.mkdir(parents=True, exist_ok=True)
-
     if platform.system() == "Windows":
         build_windows(sdk_root, bindings_root)
     else:
         arch = os.environ.get("FBX_ARCH")
         build_unix(sdk_root, bindings_root, arch)
 
-    wheels = collect_wheels(bindings_root)
-    print("Built wheels:")
-    for path in wheels:
+    wheel = collect_wheel(bindings_root)
+    print("Built wheel:")
+    for path in wheel:
         print(f"  {path}")
 
     return 0
