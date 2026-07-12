@@ -1,4 +1,4 @@
-### What is this repository for?
+## What is this repository for?
 A GitHubActions-based automated workflow for building FBX Python SDK .whl packages from FBX SDK and FBX Python Bindings.
 
 By popular demand, FBX Python SDK packages are built for Python versions 3.7, 3.9. 3.11, 3.13, and FBX SDK version 2020.3.9
@@ -6,3 +6,12 @@ with hints stub files enabled.
 
 Each version is compiled for Windows (win_AMD64; with VS_2022), Linux (manylinux2014_x86_64),
 and macOS (macosx_10_15_x86_64, macosx_11_0_ARM64, macosx_10_15_universal2).
+
+## Acknowledgements
+
+I would like to specifically thank the author of [this article](https://zenn.dev/nadegata_memo/articles/47690559881ee5#4.1.-fbx-sdk-%E3%81%AE%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB) explaining and providing clear instructions on building an FBX Python SDK package. The code for test.py is copied directly from the article.
+
+## Legal Disclaimer
+This project does not redistribute the Autodesk FBX SDK or its Python bindings nor does it publish the resulting wheels. No Autodesk code is committed into the repository.
+
+During the build process, the required SDK and bindings are downloaded directly from Autodesk's official sources. Users are responsible for complying with Autodesk's licence terms when using the SDK.

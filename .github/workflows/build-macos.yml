@@ -75,9 +75,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -93,14 +93,14 @@ jobs:
 
       - name: Restore FBX SDK cache
         id: cache-fbxsdk
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: cache/fbxsdk
           key: fbxsdk-2020.3.9-${{ runner.os }}
 
       - name: Restore FBX Python Bindings cache
         id: cache-fbxpython
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: cache/fbxbind
           key: fbxbindings-2020.3.9-${{ runner.os }}
@@ -115,8 +115,13 @@ jobs:
         run: |
           python scripts/build.py
 
+      - name: Install and test wheel
+        run: |
+          python -m pip install ./dist/*.whl
+          python scripts/test.py -o "${{ runner.temp }}/test_output" --ascii
+
       - name: Upload wheel
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: fbx-2020.3.9-py${{ matrix.python }}-${{ matrix.platform }}
           path: dist/*.whl
