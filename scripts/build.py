@@ -107,17 +107,6 @@ def find_vcvarsall() -> Path:
 
     return vcvars
 
-
-def locate_sip_wheel() -> str:
-    sip_wheel = shutil.which("sip-wheel")
-    if sip_wheel:
-        return sip_wheel
-    raise BuildError(
-        "sip-wheel was not found on PATH. "
-        "Install SIP in the current Python environment before running build.py."
-    )
-
-
 def run_command(cmd, cwd: Path | None = None, env: dict | None = None, shell: bool = False) -> None:
     print(f"Running: {cmd}")
     subprocess.run(cmd, cwd=cwd, env=env, shell=shell, check=True)
@@ -128,7 +117,6 @@ def build_windows(sdk_root: Path, bindings_root: Path) -> None:
     VCVARS_VER = "14.44"
 
     vcvarsall = find_vcvarsall()
-    sip_wheel = locate_sip_wheel()
     env = os.environ.copy()
     env["FBXSDK_ROOT"] = str(sdk_root)
     env["FBXSDK_COMPILER"] = env.get("FBXSDK_COMPILER", "vs2022")
@@ -136,14 +124,13 @@ def build_windows(sdk_root: Path, bindings_root: Path) -> None:
     command = (
         f'call "{vcvarsall}" {BUILD_TARGET} -vcvars_ver={VCVARS_VER} '
         f'&& cd /d "{bindings_root}" '
-        f'&& "{sip_wheel}" --verbose --pep484-pyi'
+        f'&& python -m sipbuild.tools.wheel --verbose --pep484-pyi'
     )
 
     run_command(command, env=env, shell=True)
 
 
 def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> None:
-    sip_wheel = locate_sip_wheel()
     env = os.environ.copy()
     env["FBXSDK_ROOT"] = str(sdk_root)
     if platform.system() == "Linux":
@@ -156,7 +143,7 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
             else:
                 env["ARCHFLAGS"] = f"-arch {arch}"
 
-    run_command([sip_wheel, "--verbose", "--pep484-pyi"], cwd=bindings_root, env=env)
+    run_command(["python -m sipbuild.tools.wheel", "--verbose", "--pep484-pyi"], cwd=bindings_root, env=env)
 
 
 def collect_wheels(bindings_root: Path) -> list[Path]:
