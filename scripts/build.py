@@ -159,9 +159,6 @@ def collect_wheel(bindings_root: Path) -> None:
     for wheel in built_wheel:
         print(wheel)
 
-    if DIST_DIR.exists():
-        shutil.rmtree(DIST_DIR)
-
     DIST_DIR.mkdir(exist_ok=True)
 
     for wheel_path in built_wheel:

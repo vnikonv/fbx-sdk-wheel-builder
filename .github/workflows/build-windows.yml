@@ -51,13 +51,6 @@ jobs:
           path: cache/fbxsdk
           key: fbxsdk-2020.3.9-${{ runner.os }}
 
-      - name: Restore FBX Python Bindings cache
-        id: cache-fbxpython
-        uses: actions/cache@v6
-        with:
-          path: cache/fbxbind
-          key: fbxbindings-2020.3.9-${{ runner.os }}
-
       - name: Install FBX SDK and FBX Python bindings
         run: |
           python scripts/install_fbx.py
