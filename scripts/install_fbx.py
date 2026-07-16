@@ -143,16 +143,28 @@ def install_macos(extract_dir: Path, destination: Path) -> None:
         check=True,
     )
 
-    payloads = list(expanded.rglob("Payload"))
-    if len(payloads) != 1:
-        raise RuntimeError(f"Expected exactly one Payload, found {len(payloads)}.")
+    sdk_root = None
+    for directory in expanded.rglob("*"):
+        if (
+            directory.is_dir()
+            and (directory / "include").is_dir()
+            and (directory / "lib").is_dir()
+        ):
+            sdk_root = directory
+            break
+
+    if sdk_root is None:
+        raise RuntimeError(
+            f"Could not locate an extracted SDK in {expanded}."
+        )
 
     destination.mkdir(parents=True, exist_ok=True)
 
-    print(f"Extracting Payload to {destination}")
-    subprocess.run(
-        ["ditto", "-x", "-k", str(payloads[0]), str(destination)],
-        check=True,
+    print(f"Copying {sdk_root} to {destination}")
+    shutil.copytree(
+        sdk_root,
+        destination,
+        dirs_exist_ok=True,
     )
 
     print(f"Successfully extracted package to {destination}")
