@@ -207,40 +207,36 @@ def install_sdk_and_bindings():
     """Extract and verify SDK and bindings."""
     print(f"Installing FBX SDK {FBX_VERSION} on {SYSTEM}\n")
 
-    if verify_sdk_structure(SDK_CACHE):
-        print("Using cached SDK")
-        return
-
-    if verify_bindings_structure(BIND_CACHE):
-        print("Using cached bindings")
-        return
-
     if SYSTEM == "Windows":
         ensure_7z_available()
 
     print("--- Extracting FBX SDK ---")
-    extract_archive(SDK_INSTALLER, SDK_CACHE)
+    if verify_sdk_structure(SDK_CACHE):
+        print("Using cached SDK")
+    else:
+        extract_archive(SDK_INSTALLER, SDK_CACHE)
 
-    if SYSTEM == "Darwin":
-        install_macos(SDK_CACHE, SDK_CACHE)
+        if SYSTEM == "Darwin":
+            install_macos(SDK_CACHE, SDK_CACHE)
+        elif SYSTEM == "Linux":
+            install_linux(SDK_CACHE, SDK_CACHE)
 
-    if SYSTEM == "Linux":
-        install_linux(SDK_CACHE, SDK_CACHE)
-
-    if not verify_sdk_structure(SDK_CACHE):
-        raise RuntimeError("SDK verification failed")
+        if not verify_sdk_structure(SDK_CACHE):
+            raise RuntimeError("SDK verification failed")
 
     print("\n--- Extracting FBX Python Bindings ---")
-    extract_archive(PYTHON_INSTALLER, BIND_CACHE)
+    if verify_bindings_structure(BIND_CACHE):
+        print("Using cached bindings")
+    else:
+        extract_archive(PYTHON_INSTALLER, BIND_CACHE)
 
-    if SYSTEM == "Darwin":
-        install_macos(BIND_CACHE, BIND_CACHE)
+        if SYSTEM == "Darwin":
+            install_macos(BIND_CACHE, BIND_CACHE)
+        elif SYSTEM == "Linux":
+            install_linux(BIND_CACHE, BIND_CACHE)
 
-    if SYSTEM == "Linux":
-        install_linux(BIND_CACHE, BIND_CACHE)
-
-    if not verify_bindings_structure(BIND_CACHE):
-        raise RuntimeError("Bindings verification failed")
+        if not verify_bindings_structure(BIND_CACHE):
+            raise RuntimeError("Bindings verification failed")
 
 
 download(SDK_URL, SDK_INSTALLER)

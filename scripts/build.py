@@ -137,15 +137,16 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
         env["FBXSDK_COMPILER"] = env.get("FBXSDK_COMPILER", "gcc")
     elif platform.system() == "Darwin":
         env["FBXSDK_COMPILER"] = env.get("FBXSDK_COMPILER", "clang")
+        env.pop("ARCHFLAGS", None)
         if arch:
             if arch == "universal2":
                 env["ARCHFLAGS"] = "-arch arm64 -arch x86_64"
                 env["MACOSX_DEPLOYMENT_TARGET"] = "10.15"
             else:
                 env["ARCHFLAGS"] = f"-arch {arch}"
-                if arch == "x86_64":
+                if arch == "x86_64" and sys.version_info != (3, 7):
                     env["MACOSX_DEPLOYMENT_TARGET"] = "10.15"
-                else:
+                elif arch == "arm64" or sys.version_info == (3, 7):
                     env["MACOSX_DEPLOYMENT_TARGET"] = "11.0"
 
     cmd = [
