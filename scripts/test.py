@@ -31,7 +31,7 @@ try:
 
     if not fbx_exporter.Initialize(str(output_path), file_format, fbx_manager.GetIOSettings()):
         print(f"Error initializing FBX exporter: {fbx_exporter.GetStatus().GetErrorString()}")
-        exit(1)
+        sys.exit(1)
 
     # Create a new FBX scene
     new_scene = FbxScene.Create(fbx_manager, "New Scene")
@@ -39,7 +39,7 @@ try:
     # Export the scene
     if not fbx_exporter.Export(new_scene):
         print(f"Error exporting FBX scene: {fbx_exporter.GetStatus().GetErrorString()}")
-        exit(1)
+        sys.exit(1)
 
     print(f"Successfully exported FBX file to: {output_path}")
 

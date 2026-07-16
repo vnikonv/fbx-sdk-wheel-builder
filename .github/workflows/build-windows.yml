@@ -74,4 +74,5 @@ jobs:
 
             - name: Test wheel
               run: |
-                  python scripts/test.py -o "${{ runner.temp }}/test_output" --ascii
+                  python scripts/test.py -o "${{ runner.temp }}\test_output" --ascii
+                  echo "Python exit code: $?"
