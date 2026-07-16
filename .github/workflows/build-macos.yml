@@ -32,11 +32,6 @@ jobs:
 
           # macOS arm64
           - os: macos-14
-            python: "3.7"
-            platform: macosx_11_0_arm64
-            arch: arm64
-
-          - os: macos-14
             python: "3.9"
             platform: macosx_11_0_arm64
             arch: arm64
@@ -52,11 +47,6 @@ jobs:
             arch: arm64
 
           # macOS universal2
-          - os: macos-14
-            python: "3.7"
-            platform: macosx_10_15_universal2
-            arch: universal2
-
           - os: macos-14
             python: "3.9"
             platform: macosx_10_15_universal2
@@ -97,6 +87,15 @@ jobs:
         with:
           path: cache/fbxsdk
           key: fbxsdk-2020.3.9-${{ runner.os }}
+
+      - name: Restore FBX Python Bindings cache
+        id: cache-fbxpython
+        uses: actions/cache@v6
+        with:
+          path: |
+            cache/fbxbind
+            !cache/fbxbind/*.whl
+          key: fbxbindings-2020.3.9-${{ runner.os }}
 
       - name: Install FBX SDK and FBX Python bindings
         run: |

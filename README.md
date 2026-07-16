@@ -9,7 +9,7 @@ and macOS (macosx_10_15_x86_64, macosx_11_0_ARM64, macosx_10_15_universal2).
 
 ## Acknowledgements
 
-I would like to specifically thank the author of [this article](https://zenn.dev/nadegata_memo/articles/47690559881ee5#4.1.-fbx-sdk-%E3%81%AE%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB) explaining and providing clear instructions on building an FBX Python SDK package. The code for test.py is copied directly from the article.
+I would like to specifically thank the author of [this article](https://zenn.dev/nadegata_memo/articles/47690559881ee5#4.1.-fbx-sdk-%E3%81%AE%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB) explaining and providing clear instructions on building an FBX Python SDK package. The code for test.py is copied directly from the article, with a few modifications.
 
 ## Legal Disclaimer
 This project does not redistribute the Autodesk FBX SDK or its Python bindings nor does it publish the resulting wheels. No Autodesk code is committed into the repository.

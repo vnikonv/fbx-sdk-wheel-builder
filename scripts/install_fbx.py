@@ -57,7 +57,7 @@ def download(url: str, destination: Path) -> None:
         raise RuntimeError(f"Failed to download {url}: {e}")
 
 
-def extract_tar_gz(archive_path: Path, extract_to: Path) -> None:
+def extract_tar_gz(archive_path: Path, extract_to: Path) -> Path:
     """Extract .tar.gz file using tarfile."""
     print(f"Extracting {archive_path.name}")
     extract_to.mkdir(parents=True, exist_ok=True)
@@ -65,6 +65,7 @@ def extract_tar_gz(archive_path: Path, extract_to: Path) -> None:
         with tarfile.open(archive_path, "r:*") as tar:
             tar.extractall(path=extract_to)
         print(f"Successfully extracted to {extract_to}")
+        return extract_to
     except Exception as e:
         raise RuntimeError(f"Failed to extract {archive_path}: {e}")
 
@@ -84,7 +85,9 @@ def extract_exe_with_7z(archive_path: Path, extract_to: Path) -> None:
     print(f"Extracting {archive_path.name} with 7z")
     extract_to.mkdir(parents=True, exist_ok=True)
     try:
-        subprocess.run(["7z", "x", str(archive_path), f"-o{extract_to}", "-y"], check=True)
+        subprocess.run(
+            ["7z", "x", str(archive_path), f"-o{extract_to}", "-y"], check=True
+        )
         print(f"Successfully extracted {archive_path.name} to {extract_to}")
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"7z failed to extract {archive_path}: {e}")
@@ -93,7 +96,7 @@ def extract_exe_with_7z(archive_path: Path, extract_to: Path) -> None:
 def extract_archive(archive_path: Path, extract_to: Path) -> None:
     """Extract archive based on file type."""
     archive_path = Path(archive_path)
-    
+
     if archive_path.name.endswith(".tar.gz") or archive_path.name.endswith(".tgz"):
         extract_tar_gz(archive_path, extract_to)
     elif archive_path.suffix == ".exe":
@@ -122,24 +125,97 @@ def verify_bindings_structure(bindings_path: Path) -> bool:
     return True
 
 
+def install_macos(extract_dir: Path, destination: Path) -> None:
+    """Extract a macOS .pkg into the destination directory."""
+
+    packages = list(extract_dir.rglob("*.pkg"))
+    if len(packages) != 1:
+        raise RuntimeError(
+            f"Expected exactly one .pkg in {extract_dir}, found {len(packages)}."
+        )
+
+    pkg = packages[0]
+    expanded = extract_dir / "expanded"
+
+    print(f"Expanding {pkg.name}")
+    subprocess.run(
+        ["pkgutil", "--expand-full", str(pkg), str(expanded)],
+        check=True,
+    )
+
+    payloads = list(expanded.rglob("Payload"))
+    if len(payloads) != 1:
+        raise RuntimeError(f"Expected exactly one Payload, found {len(payloads)}.")
+
+    destination.mkdir(parents=True, exist_ok=True)
+
+    print(f"Extracting Payload to {destination}")
+    subprocess.run(
+        ["ditto", "-x", "-k", str(payloads[0]), str(destination)],
+        check=True,
+    )
+
+    print(f"Successfully extracted package to {destination}")
+
+
+def install_linux(extract_dir: Path, destination: Path) -> None:
+    """Run linux installer with the specified destination directory"""
+    installers = [p for p in extract_dir.iterdir() if p.is_file() and p.suffix == ""]
+
+    if len(installers) != 1:
+        raise RuntimeError(
+            f"Expected exactly one installer in {extract_dir}, found {len(installers)}."
+        )
+
+    installer = installers[0]
+
+    installer.chmod(installer.stat().st_mode | 0o111)
+    destination.mkdir(parents=True, exist_ok=True)
+
+    print(f"Running {installer.name}")
+
+    subprocess.run(
+        [str(installer), str(destination)],
+        input="yes\nn\n",
+        text=True,
+        check=True,
+    )
+
+    print(f"Successfully installed to {destination}")
+
+
 def install_sdk_and_bindings():
     """Extract and verify SDK and bindings."""
     print(f"Installing FBX SDK {FBX_VERSION} on {SYSTEM}\n")
 
     if SYSTEM == "Windows":
         ensure_7z_available()
-    
+
     print("--- Extracting FBX SDK ---")
     extract_archive(SDK_INSTALLER, SDK_CACHE)
+
+    if SYSTEM == "Darwin":
+        install_macos(SDK_CACHE, SDK_CACHE)
+
+    if SYSTEM == "Linux":
+        install_linux(SDK_CACHE, SDK_CACHE)
+
     if not verify_sdk_structure(SDK_CACHE):
         raise RuntimeError("SDK verification failed")
-    
+
     print("\n--- Extracting FBX Python Bindings ---")
     extract_archive(PYTHON_INSTALLER, BIND_CACHE)
+
+    if SYSTEM == "Darwin":
+        install_macos(BIND_CACHE, BIND_CACHE)
+
+    if SYSTEM == "Linux":
+        install_linux(BIND_CACHE, BIND_CACHE)
+
     if not verify_bindings_structure(BIND_CACHE):
         raise RuntimeError("Bindings verification failed")
 
+
 download(SDK_URL, SDK_INSTALLER)
 download(PYTHON_URL, PYTHON_INSTALLER)
-
 install_sdk_and_bindings()
