@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from fbx import FbxManager, FbxIOSettings, FbxExporter, FbxScene, IOSROOT
 import traceback
+import sys
 
 try:
     arg_parser = ArgumentParser()
@@ -49,3 +50,4 @@ except BaseException:
     raise
 finally:
     print("finally block reached")
+    sys.exit(0)

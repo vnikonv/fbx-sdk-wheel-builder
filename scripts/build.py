@@ -140,8 +140,13 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
         if arch:
             if arch == "universal2":
                 env["ARCHFLAGS"] = "-arch arm64 -arch x86_64"
+                env["MACOSX_DEPLOYMENT_TARGET"] = "10.15"
             else:
                 env["ARCHFLAGS"] = f"-arch {arch}"
+                if arch == "x86_64":
+                    env["MACOSX_DEPLOYMENT_TARGET"] = "10.15"
+                else:
+                    env["MACOSX_DEPLOYMENT_TARGET"] = "11.0"
 
     run_command(["python -m sipbuild.tools.wheel", "--verbose", "--pep484-pyi"], cwd=bindings_root, env=env)
 
