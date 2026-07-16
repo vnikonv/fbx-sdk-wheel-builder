@@ -107,11 +107,6 @@ def find_vcvarsall() -> Path:
 
     return vcvars
 
-def run_command(cmd, cwd: Path | None = None, env: dict | None = None, shell: bool = False) -> None:
-    print(f"Running: {cmd}")
-    subprocess.run(cmd, cwd=cwd, env=env, shell=shell, check=True)
-
-
 def build_windows(sdk_root: Path, bindings_root: Path) -> None:
     BUILD_TARGET = "x64"
     VCVARS_VER = "14.44"
@@ -124,10 +119,15 @@ def build_windows(sdk_root: Path, bindings_root: Path) -> None:
     command = (
         f'call "{vcvarsall}" {BUILD_TARGET} -vcvars_ver={VCVARS_VER} '
         f'&& cd /d "{bindings_root}" '
-        f'&& python -m sipbuild.tools.wheel --verbose --pep484-pyi'
+        f"&& python -m sipbuild.tools.wheel --verbose --pep484-pyi"
     )
 
-    run_command(command, env=env, shell=True)
+    subprocess.run(
+        command,
+        env=env,
+        shell=True,
+        check=True,
+    )
 
 
 def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> None:
@@ -148,18 +148,34 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
                 else:
                     env["MACOSX_DEPLOYMENT_TARGET"] = "11.0"
 
-    run_command(["python -m sipbuild.tools.wheel", "--verbose", "--pep484-pyi"], cwd=bindings_root, env=env)
+    cmd = [
+        sys.executable,
+        "-m",
+        "sipbuild.tools.wheel",
+        "--verbose",
+        "--pep484-pyi",
+    ]
+
+    print(f"Running: {' '.join(cmd)}")
+    subprocess.run(
+        cmd,
+        cwd=bindings_root,
+        env=env,
+        check=True,
+    )
 
 
 def collect_wheel(bindings_root: Path) -> None:
     built_dist = bindings_root
     if not built_dist.exists():
-        raise BuildError(f"Expected wheel output in {built_dist}, but the directory does not exist.")
+        raise BuildError(
+            f"Expected wheel output in {built_dist}, but the directory does not exist."
+        )
 
     built_wheel = sorted(built_dist.glob("*.whl"))
     if not built_wheel:
         raise BuildError(f"No wheel files were found in {built_dist} after build.")
-    
+
     print("Built wheel:")
     for wheel in built_wheel:
         print(wheel)
