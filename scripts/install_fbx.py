@@ -143,28 +143,35 @@ def install_macos(extract_dir: Path, destination: Path) -> None:
         check=True,
     )
 
-    sdk_root = None
+    payload_root = None
     for directory in expanded.rglob("*"):
         if (
             directory.is_dir()
             and (directory / "include").is_dir()
             and (directory / "lib").is_dir()
         ):
-            sdk_root = directory
+            payload_root = directory
             break
 
-    if sdk_root is None:
+        elif (
+            directory.is_dir()
+            and (directory / "sip").is_dir()
+            and (directory / "samples").is_dir()
+        ):
+            payload_root = directory
+            break
+
+    if payload_root is None:
         raise RuntimeError(
             f"Could not locate an extracted SDK in {expanded}."
         )
-
+    
     destination.mkdir(parents=True, exist_ok=True)
 
-    print(f"Copying {sdk_root} to {destination}")
-    shutil.copytree(
-        sdk_root,
-        destination,
-        dirs_exist_ok=True,
+    print(f"Copying {payload_root} to {destination}")
+    subprocess.run(
+        ["rsync", "-a", f"{payload_root}/", f"{destination}/"],
+        check=True,
     )
 
     print(f"Successfully extracted package to {destination}")
