@@ -207,6 +207,14 @@ def install_sdk_and_bindings():
     """Extract and verify SDK and bindings."""
     print(f"Installing FBX SDK {FBX_VERSION} on {SYSTEM}\n")
 
+    if verify_sdk_structure(SDK_CACHE):
+        print("Using cached SDK")
+        return
+
+    if verify_bindings_structure(BIND_CACHE):
+        print("Using cached bindings")
+        return
+
     if SYSTEM == "Windows":
         ensure_7z_available()
 
