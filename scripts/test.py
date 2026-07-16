@@ -3,8 +3,11 @@ from pathlib import Path
 from fbx import FbxManager, FbxIOSettings, FbxExporter, FbxScene, IOSROOT
 import traceback
 import sys
+import os
 
 try:
+    print(os.environ.get("FBXSDK_ROOT"))
+
     arg_parser = ArgumentParser()
     arg_parser.add_argument("-o", "--output-name", type=str, required=True, help="Name of the output FBX file")
     arg_parser.add_argument("--ascii", action="store_true", help="Export in ASCII format")
@@ -43,11 +46,8 @@ try:
 
     print(f"Successfully exported FBX file to: {output_path}")
 
-    # Cleanup
-    fbx_manager.Destroy()
 except BaseException:
     traceback.print_exc()
     raise
 finally:
     print("finally block reached")
-    sys.exit(0)

@@ -80,6 +80,8 @@ jobs:
             - name: Test wheel
               shell: pwsh
               run: |
+                  python -c "import fbx; import os; print(os.path.dirname(fbx.__file__))"
+                  $env:FBXSDK_ROOT = "${{ github.workspace }}\cache\fbxsdk"
                   python scripts/test.py -o "${{ runner.temp }}\test_output" --ascii
                   Write-Host "Success: $?"
                   Write-Host "Exit code: $LASTEXITCODE"
