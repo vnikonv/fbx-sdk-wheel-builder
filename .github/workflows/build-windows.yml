@@ -50,8 +50,13 @@ jobs:
               with:
                   path: |
                       cache
-                      !cache/**/*.whl
                   key: fbx-2020.3.9-${{ runner.os }}
+
+            - name: Clear all *.whl files in the cache folder
+              if: always()
+              shell: bash
+              run: |
+                  rm -f cache/**/*.whl
 
             - name: Install FBX SDK and FBX Python bindings
               run: |
@@ -73,6 +78,8 @@ jobs:
                   path: dist/*.whl
 
             - name: Test wheel
+              shell: pwsh
               run: |
                   python scripts/test.py -o "${{ runner.temp }}\test_output" --ascii
-                  echo "Python exit code: $?"
+                  Write-Host "Success: $?"
+                  Write-Host "Exit code: $LASTEXITCODE"

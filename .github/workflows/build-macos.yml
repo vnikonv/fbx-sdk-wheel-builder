@@ -87,8 +87,12 @@ jobs:
               with:
                   path: |
                       cache
-                      !cache/**/*.whl
                   key: fbx-2020.3.9-${{ runner.os }}
+
+            - name: Clear all *.whl files in the cache folder
+              if: always()
+              run: |
+                  rm -f cache/**/*.whl
 
             - name: Install FBX SDK and FBX Python bindings
               run: |

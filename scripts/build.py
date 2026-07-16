@@ -164,7 +164,10 @@ def collect_wheel(bindings_root: Path) -> None:
     for wheel in built_wheel:
         print(wheel)
 
-    DIST_DIR.mkdir(exist_ok=True)
+    if DIST_DIR.exists():
+        shutil.rmtree(DIST_DIR)
+
+    DIST_DIR.mkdir()
 
     for wheel_path in built_wheel:
         destination = DIST_DIR / wheel_path.name
