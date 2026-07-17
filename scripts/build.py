@@ -162,6 +162,20 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
         "--pep484-pyi",
     ]
 
+    if platform.system() == "Darwin" and arch:
+        py_ver = f"cp{sys.version_info.major}{sys.version_info.minor}"
+        py_tag = f"{py_ver}-{py_ver}"
+        
+        if arch == "arm64":
+            cmd.append(f"--build-tag={py_tag}-macosx_11_0_arm64")
+        elif arch == "x86_64":
+            if sys.version_info == (3, 7):
+                cmd.append(f"--build-tag={py_tag}-macosx_11_7_x86_64")
+            else:
+                cmd.append(f"--build-tag={py_tag}-macosx_10_15_x86_64")
+        elif arch == "universal2":
+            cmd.append(f"--build-tag={py_tag}-macosx_10_15_universal2")
+
     print(f"Running: {' '.join(cmd)}")
     subprocess.run(
         cmd,
