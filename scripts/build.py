@@ -107,6 +107,7 @@ def find_vcvarsall() -> Path:
 
     return vcvars
 
+
 def build_windows(sdk_root: Path, bindings_root: Path) -> None:
     BUILD_TARGET = "x64"
     VCVARS_VER = "14.44"
@@ -162,20 +163,6 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
         "--pep484-pyi",
     ]
 
-    if platform.system() == "Darwin" and arch:
-        py_ver = f"cp{sys.version_info.major}{sys.version_info.minor}"
-        py_tag = f"{py_ver}-{py_ver}"
-        
-        if arch == "arm64":
-            cmd.append(f"--build-tag={py_tag}-macosx_11_0_arm64")
-        elif arch == "x86_64":
-            if sys.version_info == (3, 7):
-                cmd.append(f"--build-tag={py_tag}-macosx_11_7_x86_64")
-            else:
-                cmd.append(f"--build-tag={py_tag}-macosx_10_15_x86_64")
-        elif arch == "universal2":
-            cmd.append(f"--build-tag={py_tag}-macosx_10_15_universal2")
-
     print(f"Running: {' '.join(cmd)}")
     subprocess.run(
         cmd,
@@ -183,6 +170,43 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
         env=env,
         check=True,
     )
+
+    if platform.system() == "Darwin" and arch:
+        wheels = sorted(bindings_root.glob("*.whl"))
+        if not wheels:
+            print("Warning: No wheels found to retag.")
+            return
+
+        built_wheel = max(wheels, key=os.path.getmtime)
+
+        if arch == "arm64":
+            target_platform = "macosx_11_0_arm64"
+        elif arch == "x86_64":
+            if sys.version_info == (3, 7):
+                target_platform = "macosx_11_7_x86_64"
+            else:
+                target_platform = "macosx_10_15_x86_64"
+        elif arch == "universal2":
+            target_platform = "macosx_10_15_universal2"
+        else:
+            return
+
+        retag_cmd = [
+            sys.executable,
+            "-m",
+            "wheel",
+            "tags",
+            f"--platform-tag={target_platform}",
+            "--remove",
+            built_wheel,
+        ]
+
+        print(f"Retagging wheel: {' '.join(retag_cmd)}")
+        subprocess.run(
+            retag_cmd,
+            cwd=bindings_root,
+            check=True,
+        )
 
 
 def collect_wheel(bindings_root: Path) -> None:
