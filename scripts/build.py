@@ -198,7 +198,7 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
             "tags",
             f"--platform-tag={target_platform}",
             "--remove",
-            built_wheel,
+            str(built_wheel),
         ]
 
         print(f"Retagging wheel: {' '.join(retag_cmd)}")
