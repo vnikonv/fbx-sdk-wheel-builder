@@ -145,13 +145,13 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
                 env["MACOSX_DEPLOYMENT_TARGET"] = "10.15"
             else:
                 env["ARCHFLAGS"] = f"-arch {arch}"
-                if arch == "x86_64" and sys.version_info != (3, 7):
+                if arch == "x86_64" and sys.version_info[:2] != (3, 7):
                     env["MACOSX_DEPLOYMENT_TARGET"] = "10.15"
                     env["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-x86_64"
                 elif arch == "arm64":
                     env["MACOSX_DEPLOYMENT_TARGET"] = "11.0"
                     env["_PYTHON_HOST_PLATFORM"] = "macosx-11.0-arm64"
-                elif sys.version_info == (3, 7):
+                elif sys.version_info[:2] == (3, 7):
                     env["MACOSX_DEPLOYMENT_TARGET"] = "11.7"
                     env["_PYTHON_HOST_PLATFORM"] = "macosx-11.0-x86_64"
 
@@ -182,7 +182,7 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
         if arch == "arm64":
             target_platform = "macosx_11_0_arm64"
         elif arch == "x86_64":
-            if sys.version_info == (3, 7):
+            if sys.version_info[:2] == (3, 7):
                 target_platform = "macosx_11_7_x86_64"
             else:
                 target_platform = "macosx_10_15_x86_64"
@@ -196,7 +196,7 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
             "-m",
             "wheel",
             "tags",
-            f"--platform-tag={target_platform}",
+            "--platform-tag", target_platform,
             "--remove",
             str(built_wheel),
         ]
