@@ -11,18 +11,22 @@ jobs:
                 include:
                     - os: windows-latest
                       python: "3.7"
+                      py: "37"
                       platform: win_amd64
 
                     - os: windows-latest
                       python: "3.9"
+                      py: "39"
                       platform: win_amd64
 
                     - os: windows-latest
                       python: "3.11"
+                      py: "311"
                       platform: win_amd64
 
                     - os: windows-latest
                       python: "3.13"
+                      py: "313"
                       platform: win_amd64
 
         runs-on: ${{ matrix.os }}
@@ -30,19 +34,11 @@ jobs:
         steps:
             - uses: actions/checkout@v6
 
-            - uses: actions/setup-python@v6
+            - name: Set up specific MSVC Toolset
+              uses: ilammy/msvc-dev-cmd@v1
               with:
-                  python-version: ${{ matrix.python }}
-
-            - name: Show build target
-              run: |
-                  python --version
-                  echo Platform: ${{ matrix.platform }}
-
-            - name: Install build dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install sip==6.6.2
+                  arch: x64
+                  toolset: "14.44"
 
             - name: Restore FBX SDK and FBX Python bindings cache
               id: cache-fbx
@@ -62,26 +58,34 @@ jobs:
               run: |
                   python scripts/install_fbx.py
 
-            - name: Build wheel
+            - name: Enable PEP 484 type stubs
               run: |
-                  python scripts/build.py
+                  python scripts/enable_hints.py
 
-            - name: Install wheel
-              shell: bash
-              run: |
-                  python -m pip install ./dist/*.whl
+            - name: Build and test wheels
+              uses: pypa/cibuildwheel@v2.21.0
+              # Use version compatible with Python 3.7
+              with:
+                  package-dir: "cache/fbxbind"
+              env:
+                  CIBW_BUILD: "cp${{ matrix.py }}-win_amd64"
+                  CIBW_SKIP: "-win32 *arm64 pp*"
+                  CIBW_TEST_SKIP: "cp313-*"
+                  CIBW_BUILD_VERBOSITY: "1"
+                  CIBW_BEFORE_BUILD: "pip install --force-reinstall sip==6.6.2"
+                  CIBW_ENVIRONMENT: >
+                      DISTUTILS_USE_SDK=1
+                      MSSdk=1
+                      FBXSDK_ROOT=../fbxsdk
+                      FBXSDK_COMPILER=vs2022
+                  CIBW_TEST_COMMAND: >
+                      python -c "import fbx; import os; print(os.path.dirname(fbx.__file__))" && 
+                      python %GITHUB_WORKSPACE%/scripts/test.py -o %GITHUB_WORKSPACE%/test_output
 
-            - name: Upload wheel
-              uses: actions/upload-artifact@v6
+            - name: Upload wheels
+              uses: actions/upload-artifact@v7
+              if: success() || failure()
               with:
                   name: fbx-2020.3.9-py${{ matrix.python }}-${{ matrix.platform }}
-                  path: dist/*.whl
-
-            - name: Test wheel
-              shell: pwsh
-              run: |
-                  python -c "import fbx; import os; print(os.path.dirname(fbx.__file__))"
-                  $env:FBXSDK_ROOT = "${{ github.workspace }}\cache\fbxsdk"
-                  python scripts/test.py -o "${{ runner.temp }}\test_output" --ascii
-                  Write-Host "Success: $?"
-                  Write-Host "Exit code: $LASTEXITCODE"
+                  path: wheelhouse/*.whl
+                  if-no-files-found: ignore

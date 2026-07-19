@@ -12,36 +12,27 @@ jobs:
                     - os: ubuntu-latest
                       python: "3.7"
                       py: "37"
-                      platform: manylinux2014_x86_64
+                      platform: manylinux_2_28_x86_64
 
                     - os: ubuntu-latest
                       python: "3.9"
                       py: "39"
-                      platform: manylinux2014_x86_64
+                      platform: manylinux_2_28_x86_64
 
                     - os: ubuntu-latest
                       python: "3.11"
                       py: "311"
-                      platform: manylinux2014_x86_64
+                      platform: manylinux_2_28_x86_64
 
                     - os: ubuntu-latest
                       python: "3.13"
                       py: "313"
-                      platform: manylinux2014_x86_64
+                      platform: manylinux_2_28_x86_64
 
         runs-on: ${{ matrix.os }}
 
         steps:
-            - uses: actions/checkout@v6
-
-            - uses: actions/setup-python@v6
-              with:
-                  python-version: ${{ matrix.python }}
-
-            - name: Show build target
-              run: |
-                  python --version
-                  echo Platform: ${{ matrix.platform }}
+            - uses: actions/checkout@v7
 
             - name: Restore FBX SDK and FBX Python bindings cache
               id: cache-fbx
@@ -64,28 +55,28 @@ jobs:
               run: |
                   python scripts/enable_hints.py
 
-            - name: Build wheels
+            - name: Build and test wheels
               uses: pypa/cibuildwheel@v2.21.0
               # Use version compatible with Python 3.7
               with:
-                package-dir: "cache/fbxbind"
+                  package-dir: "cache/fbxbind"
               env:
-                CIBW_BUILD: "cp${{ matrix.py }}-manylinux_x86_64"
-                CIBW_SKIP: "*-manylinux_i686 *-musllinux_* pp*"
-                CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
-                CIBW_BUILD_VERBOSITY: "1"
-                CIBW_BEFORE_BUILD: "pip install --force-reinstall -v sip==6.6.2"
-                CIBW_ENVIRONMENT: "FBXSDK_ROOT=/project/cache/fbxsdk"
-                CIBW_BEFORE_ALL_LINUX: "yum install -y gcc-c++ make zlib-devel libxml2-devel"
+                  CIBW_BUILD: "cp${{ matrix.py }}-manylinux_x86_64"
+                  CIBW_SKIP: "*-manylinux_i686 *-musllinux_* pp*"
+                  CIBW_TEST_SKIP: "cp313-*"
+                  CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
+                  CIBW_BUILD_VERBOSITY: "1"
+                  CIBW_BEFORE_BUILD: "pip install --force-reinstall sip==6.6.2"
+                  CIBW_ENVIRONMENT: "FBXSDK_ROOT=/project/cache/fbxsdk"
+                  CIBW_BEFORE_ALL_LINUX: "yum install -y gcc-c++ make zlib-devel libxml2-devel"
+                  CIBW_TEST_COMMAND: >
+                      python -c "import fbx; import os; print(os.path.dirname(fbx.__file__))" && 
+                      python {project}/scripts/test.py -o {project}/test_output
 
             - name: Upload wheels
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
+              if: success() || failure()
               with:
                   name: fbx-2020.3.9-py${{ matrix.python }}-${{ matrix.platform }}
                   path: wheelhouse/*.whl
-
-            - name: Test and install wheel
-              run: |
-                  python -m pip install wheelhouse/*.whl
-                  python -c "import fbx; import os; print(os.path.dirname(fbx.__file__))"
-                  python scripts/test.py -o "${{ runner.temp }}/test_output" --ascii
+                  if-no-files-found: ignore

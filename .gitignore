@@ -1,6 +1,7 @@
 *.whl
 *.pyproj
 *.sln
+*.fbx
 .vs
 cache
 dist

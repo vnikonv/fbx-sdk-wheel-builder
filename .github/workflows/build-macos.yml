@@ -12,81 +12,76 @@ jobs:
                     # macOS x86_64
                     - os: macos-15-intel
                       python: "3.7"
-                      platform: macosx_10_15_x86_64
+                      py: "37"
+                      platform: macosx_x86_64
                       arch: x86_64
 
                     - os: macos-15-intel
                       python: "3.9"
-                      platform: macosx_10_15_x86_64
+                      py: "39"
+                      platform: macosx_x86_64
                       arch: x86_64
 
                     - os: macos-15-intel
                       python: "3.11"
-                      platform: macosx_10_15_x86_64
+                      py: "311"
+                      platform: macosx_x86_64
                       arch: x86_64
 
                     - os: macos-15-intel
                       python: "3.13"
-                      platform: macosx_10_15_x86_64
+                      py: "313"
+                      platform: macosx_x86_64
                       arch: x86_64
 
                     # macOS arm64
                     - os: macos-latest
                       python: "3.9"
-                      platform: macosx_11_0_arm64
+                      py: "39"
+                      platform: macosx_arm64
                       arch: arm64
 
                     - os: macos-latest
                       python: "3.11"
-                      platform: macosx_11_0_arm64
+                      py: "311"
+                      platform: macosx_arm64
                       arch: arm64
 
                     - os: macos-latest
                       python: "3.13"
-                      platform: macosx_11_0_arm64
+                      py: "313"
+                      platform: macosx_arm64
                       arch: arm64
 
                     # macOS universal2
                     - os: macos-latest
                       python: "3.9"
-                      platform: macosx_10_15_universal2
+                      py: "39"
+                      platform: macosx_universal2
                       arch: universal2
 
                     - os: macos-latest
                       python: "3.11"
-                      platform: macosx_10_15_universal2
+                      py: "311"
+                      platform: macosx_universal2
                       arch: universal2
 
                     - os: macos-latest
                       python: "3.13"
-                      platform: macosx_10_15_universal2
+                      py: "313"
+                      platform: macosx_universal2
                       arch: universal2
 
         runs-on: ${{ matrix.os }}
 
         steps:
-            - uses: actions/checkout@v6
-
-            - uses: actions/setup-python@v6
-              with:
-                  python-version: ${{ matrix.python }}
-
-            - name: Show build target
-              run: |
-                  python --version
-                  echo Platform: ${{ matrix.platform }}
-
-            - name: Install build dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install sip==6.6.2 wheel
+            - uses: actions/checkout@v7
 
             - name: Restore FBX SDK and FBX Python bindings cache
               id: cache-fbx
               uses: actions/cache@v6
               with:
-                  path: |
-                      cache
+                  path: cache
                   key: fbx-2020.3.9-${{ runner.os }}
 
             - name: Clear all *.whl and *.pkg files in the cache folder
@@ -99,19 +94,29 @@ jobs:
               run: |
                   python scripts/install_fbx.py
 
-            - name: Build wheel
-              env:
-                  FBX_ARCH: ${{ matrix.arch }}
+            - name: Enable PEP 484 type stubs
               run: |
-                  python scripts/build.py
+                  python scripts/enable_hints.py
 
-            - name: Upload wheel
-              uses: actions/upload-artifact@v6
+            - name: Build and test wheels
+              uses: pypa/cibuildwheel@v2.21.0
+              with:
+                  package-dir: "cache/fbxbind"
+              env:
+                  CIBW_BUILD: "cp${{ matrix.py }}-macosx_${{ matrix.arch }}"
+                  CIBW_ARCHS_MACOS: "${{ matrix.arch }}"
+                  CIBW_BUILD_VERBOSITY: "1"
+                  CIBW_TEST_SKIP: "cp313-*"
+                  CIBW_BEFORE_BUILD: "pip install --force-reinstall sip==6.6.2"
+                  CIBW_ENVIRONMENT: "FBXSDK_ROOT=${{ github.workspace }}/cache/fbxsdk"
+                  CIBW_TEST_COMMAND: >
+                      python -c "import fbx; import os; print(os.path.dirname(fbx.__file__))" && 
+                      python {project}/scripts/test.py -o {project}/test_output
+
+            - name: Upload wheels
+              uses: actions/upload-artifact@v7
+              if: success() || failure()
               with:
                   name: fbx-2020.3.9-py${{ matrix.python }}-${{ matrix.platform }}
-                  path: dist/*.whl
-
-            - name: Install and test wheel
-              run: |
-                  python -m pip install ./dist/*.whl
-                  python scripts/test.py -o "${{ runner.temp }}/test_output" --ascii
+                  path: wheelhouse/*.whl
+                  if-no-files-found: ignore

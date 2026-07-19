@@ -1,3 +1,7 @@
+"""
+Deprecated. Not used anywhere in the workflows.
+"""
+
 from __future__ import annotations
 
 import os
