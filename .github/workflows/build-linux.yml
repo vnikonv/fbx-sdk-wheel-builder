@@ -5,54 +5,17 @@ on:
 
 jobs:
     build:
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - os: ubuntu-latest
-                      python: "3.7"
-                      platform: manylinux2014_x86_64
-
-                    - os: ubuntu-latest
-                      python: "3.9"
-                      platform: manylinux2014_x86_64
-
-                    - os: ubuntu-latest
-                      python: "3.11"
-                      platform: manylinux2014_x86_64
-
-                    - os: ubuntu-latest
-                      python: "3.13"
-                      platform: manylinux2014_x86_64
-
-        runs-on: ${{ matrix.os }}
-        container:
-            image: quay.io/pypa/${{ matrix.platform }}
+        runs-on: ubuntu-latest
 
         steps:
             - uses: actions/checkout@v6
 
-            - uses: actions/setup-python@v6
-              with:
-                  python-version: ${{ matrix.python }}
-
-            - name: Show build target
-              run: |
-                  python --version
-                  echo Platform: ${{ matrix.platform }}
-
-            - name: Install build dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install sip==6.6.2
-
-            - name: Restore FBX SDK and FBX Pythpn bindings cache
+            - name: Restore FBX SDK and FBX Python bindings cache
               id: cache-fbx
               uses: actions/cache@v6
               with:
                   path: |
                       cache
-                      !cache/**/*.whl
                   key: fbx-2020.3.9-${{ runner.os }}
 
             - name: Clear all *.whl files in the cache folder
@@ -64,17 +27,25 @@ jobs:
               run: |
                   python scripts/install_fbx.py
 
-            - name: Build wheel
+            - name: Enable PEP 484 type stubs
               run: |
-                  python scripts/build.py
+                  echo -e "\n[tool.sip.bindings.fbx_module]\npep484-pyi = true" >> cache/fbxbind/pyproject.toml
 
-            - name: Upload wheel
+            - name: Build wheels
+              uses: pypa/cibuildwheel@v2.21.0
+              # Use version compatible with Python 3.7
+              with:
+                package-dir: "cache/fbxbind"
+              env:
+                CIBW_BUILD: "cp37-manylinux_x86_64 cp39-manylinux_x86_64 cp311-manylinux_x86_64 cp313-manylinux_x86_64"
+                CIBW_SKIP: "*-manylinux_i686 *-musllinux_* pp*"
+                CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
+                CIBW_BUILD_VERBOSITY: "1"
+                CIBW_BEFORE_BUILD: "pip install --force-reinstall -v sip==6.6.2"
+                CIBW_ENVIRONMENT: "FBXSDK_ROOT=/project/cache/fbxsdk"
+
+            - name: Upload wheels
               uses: actions/upload-artifact@v6
               with:
-                  name: fbx-2020.3.9-py${{ matrix.python }}-${{ matrix.platform }}
-                  path: dist/*.whl
-
-            - name: Install and test wheel
-              run: |
-                  python -m pip install ./dist/*.whl
-                  python scripts/test.py -o "${{ runner.temp }}/test_output" --ascii
+                  name: linux-cibuildwheel-wheels
+                  path: wheelhouse/*.whl

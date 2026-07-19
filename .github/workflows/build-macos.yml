@@ -81,7 +81,7 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install sip==6.6.2 wheel
 
-            - name: Restore FBX SDK and FBX Pythpn bindings cache
+            - name: Restore FBX SDK and FBX Python bindings cache
               id: cache-fbx
               uses: actions/cache@v6
               with:
@@ -89,7 +89,7 @@ jobs:
                       cache
                   key: fbx-2020.3.9-${{ runner.os }}
 
-            - name: Clear all *.whl and*.pkg files in the cache folder
+            - name: Clear all *.whl and *.pkg files in the cache folder
               if: always()
               run: |
                   rm -f cache/**/*.whl

@@ -48,7 +48,7 @@ def find_sdk_root() -> Path:
 def find_bindings_root() -> Path:
     candidates = []
 
-    candidates.extend([BIND_CACHE, Path("C:/fbxpython")])
+    candidates.append(BIND_CACHE)
 
     for candidate in candidates:
         root = resolve_root(candidate, ("sip",))
