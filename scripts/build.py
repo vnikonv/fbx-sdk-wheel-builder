@@ -31,7 +31,7 @@ def resolve_root(path: Path, required_markers: tuple[str, ...]) -> Path | None:
 def find_sdk_root() -> Path:
     candidates = []
 
-    candidates.extend([SDK_CACHE, Path("C:/fbxsdk")])
+    candidates.append(SDK_CACHE)
 
     for candidate in candidates:
         root = resolve_root(candidate, ("include", "lib"))
@@ -153,7 +153,7 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
                     env["_PYTHON_HOST_PLATFORM"] = "macosx-11.0-arm64"
                 elif sys.version_info[:2] == (3, 7):
                     env["MACOSX_DEPLOYMENT_TARGET"] = "11.7"
-                    env["_PYTHON_HOST_PLATFORM"] = "macosx-11.0-x86_64"
+                    env["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-x86_64"
 
     cmd = [
         sys.executable,
@@ -182,10 +182,7 @@ def build_unix(sdk_root: Path, bindings_root: Path, arch: str | None = None) -> 
         if arch == "arm64":
             target_platform = "macosx_11_0_arm64"
         elif arch == "x86_64":
-            if sys.version_info[:2] == (3, 7):
-                target_platform = "macosx_11_7_x86_64"
-            else:
-                target_platform = "macosx_10_15_x86_64"
+            target_platform = "macosx_10_15_x86_64"
         elif arch == "universal2":
             target_platform = "macosx_10_15_universal2"
         else:
