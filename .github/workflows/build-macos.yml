@@ -82,7 +82,7 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: cache
-                  key: fbx-2020.3.9-${{ runner.os }}
+                  key: fbx-2020.3.11-${{ runner.os }}
 
             - name: Clear all *.whl and *.pkg files in the cache folder
               if: always()
@@ -117,6 +117,6 @@ jobs:
               uses: actions/upload-artifact@v7
               if: success() || failure()
               with:
-                  name: fbx-2020.3.9-py${{ matrix.python }}-${{ matrix.platform }}
+                  name: fbx-2020.3.11-py${{ matrix.python }}-${{ matrix.platform }}
                   path: wheelhouse/*.whl
                   if-no-files-found: ignore

@@ -5,7 +5,7 @@ import urllib.request
 import tarfile
 import shutil
 
-FBX_VERSION = "2020.3.9"
+FBX_VERSION = "2020.3.11"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = SCRIPT_DIR.parent
@@ -21,20 +21,20 @@ SYSTEM = platform.system()
 if SYSTEM == "Windows":
     SDK_NAME = "fbxsdk.exe"
     PYTHON_NAME = "fbxpython.exe"
-    SDK_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx202039_fbxsdk_vs2022_win.exe"
-    PYTHON_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx202039_fbxpythonbindings_win.exe"
+    SDK_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx2020311_fbxsdk_vs2022_win.exe"
+    PYTHON_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx2020311_fbxpythonbindings_win.exe"
 
 elif SYSTEM == "Linux":
     SDK_NAME = "fbxsdk.tar.gz"
     PYTHON_NAME = "fbxpython.tar.gz"
-    SDK_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx202039_fbxsdk_gcc_linux.tar.gz"
-    PYTHON_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx202039_fbxpythonbindings_linux.tar.gz"
+    SDK_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx2020311_fbxsdk_gcc_linux.tar.gz"
+    PYTHON_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx2020311_fbxpythonbindings_linux.tar.gz"
 
 elif SYSTEM == "Darwin":
     SDK_NAME = "fbxsdk.tar.gz"
     PYTHON_NAME = "fbxpython.tar.gz"
-    SDK_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx202039_fbxsdk_clang_mac.pkg.tgz"
-    PYTHON_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx202039_fbxpythonbindings_mac.pkg.tgz"
+    SDK_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx2020311_fbxsdk_clang_mac.pkg.tgz"
+    PYTHON_URL = "https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx2020311_fbxpythonbindings_mac.pkg.tgz"
 
 else:
     raise RuntimeError(f"Unsupported platform: {SYSTEM}")

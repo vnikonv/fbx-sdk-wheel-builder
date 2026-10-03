@@ -2,7 +2,7 @@
 A GitHubActions-based automated workflow for building FBX Python SDK .whl packages from FBX SDK and FBX Python Bindings.
 It utilizes cibuildwheel and auditwheel in building and testing the produced wheels.
 
-By popular demand, FBX Python SDK packages are built for Python versions 3.7, 3.9. 3.11, 3.13, and FBX SDK version 2020.3.9
+By popular demand, FBX Python SDK packages are built for Python versions 3.7, 3.9. 3.11, 3.13, and FBX SDK version 2020.3.11
 with hints stub files (.pyi) enabled. Each version is compiled for Windows (win_AMD64; with vs2022), Linux (manylinux_2_28_x86_64),
 and macOS (macosx_10_9_x86_64, macosx_11_0_ARM64, macosx_10_9_universal2).
 
